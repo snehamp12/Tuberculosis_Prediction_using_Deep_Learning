@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tuberculosis Prediction</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: url('/static/uploads/hero.jpg');
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .main-container {
+      display: flex;
+      flex-direction: row;
+      max-width: 900px;
+      width: 100%;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+    }
+
+    .left-panel, .right-panel {
+      padding: 30px;
+      flex: 1;
+    }
+
+    .left-panel { background-color: #ffffff; }
+
+    .right-panel {
+      background-color: #f8f9fa;
+      border-left: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 25px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #preview img {
+      max-width: 100%;
+      max-height: 300px;
+      margin-top: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    }
+
+    #result {
+      font-weight: bold;
+      font-size: 20px;
+      color: #212529;
+      padding: 15px 20px;
+      margin-top: 20px;
+      background: #87b4e2;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      text-align: center;
+      width: 100%;
+    }
+
+    @media (max-width: 768px) {
+      .main-container { flex-direction: column; height: auto; }
+      .left-panel, .right-panel { border: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="left-panel">
+      <h1>TUBERCULOSIS PREDICTION</h1>
+      <form id="predictForm" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" required />
+        <select name="algorithm" required>
+          <option value="" disabled selected>Select Model</option>
+          <option value="resnet16">ResNet16</option>
+          <option value="vgg16">VGG16</option>
+        </select>
+        <button type="submit">Predict</button>
+      </form>
+    </div>
+
+    <div class="right-panel">
+      <div id="preview"></div>
+      <div id="result">Your prediction will appear here</div>
+    </div>
+  </div>
+
+  <script>
+  const form = document.getElementById('predictForm');
+  const preview = document.getElementById('preview');
+  const result = document.getElementById('result');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    result.textContent = 'Predicting...';
+    preview.innerHTML = '';
+
+    const fileInput = form.elements['image'];
+    const file = fileInput.files[0];
+
+    if (!file) {
+      result.textContent = 'Please upload an image.';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      preview.innerHTML = `<img src="${e.target.result}" alt="Uploaded Image"/>`;
+    };
+    reader.readAsDataURL(file);
+
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch('/predict', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        result.textContent = 'Error: ' + (data.error || 'Something went wrong.');
+        return;
+      }
+
+      result.textContent = `Prediction: ${data.prediction}`;
+    } catch (err) {
+      result.textContent = 'Error: Could not connect to server.';
+    }
+  });
+</script>
+
+</body>
+</html> 
